@@ -5,3 +5,14 @@ import * as schema from "../db/schema.js";
 
 const conn = postgres(config.dbUrl);
 export const db = drizzle(conn, {schema});
+
+export async function checkDatabaseConnection ():Promise<boolean>{
+    try{
+        await conn`SELECT 1`;
+        return true;
+    }
+    catch(error){
+        console.error("Database connection check failed:", error);
+        return false;
+    }
+}
