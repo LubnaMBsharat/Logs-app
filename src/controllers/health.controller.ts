@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import appState from "../utils/app-state.js";
 import { ServiceUnavailable } from "../errors/app-errors.js";
 
-export async function handlerHealth(req:Request, res:Response ){
+export async function healthHandler(req:Request, res:Response ){
     if(!appState.isReady || !appState.isDBReady){
         throw new ServiceUnavailable('Service is not ready yet');
     }

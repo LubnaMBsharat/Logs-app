@@ -10,7 +10,10 @@ export function errorHandler(err: Error,req: Request, res:Response , next: NextF
         console.log(err.message); 
         res.status(err.statusCode).json({error: err.message});
     }
-
+    // The request body contains malformed JSON
+    if(err instanceof SyntaxError && 'body' in err){
+        res.status(400).json({message:'The request body contains malformed JSON', error: err.message});
+    }
     else {
         console.error(err); 
         if (isDatabaseFatalError(err)) 

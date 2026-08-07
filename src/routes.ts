@@ -1,8 +1,10 @@
 import { Router } from "express";
-import { handlerHealth } from "./controllers/health.controller.js";
+import { healthHandler } from "./controllers/health.controller.js";
+import { insertLogsHandler } from "./controllers/logs.controller.js";
 
 const router = Router();
 
-router.get("/health", handlerHealth);
+router.get('/health', healthHandler);
+router.post('/logs',insertLogsHandler);
 
 export default router;
