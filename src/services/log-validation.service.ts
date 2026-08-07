@@ -5,8 +5,6 @@ export function validateLogs(requestBody:unknown){
     const logsArrayResult = logsRequestShape.safeParse(requestBody);
     if(!logsArrayResult.success)
         throw new BadRequestError("Request must contain a 'logs' array");
-    if(logsArrayResult.data.logs.length == 0)
-        throw new BadRequestError("'logs' array mustn't be empty");
     const accepted: LogEntry[]= [];
     const rejected: {index:number;reason:string}[] = [];
 
