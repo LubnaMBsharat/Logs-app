@@ -8,7 +8,7 @@ import appState from './utils/app-state.js';
 import { checkDatabaseConnection } from './config/db.js';
 import router from './routes.js';
 
-const app = express();
+export const app = express();
 const PORT = config.port;
 app.use(express.json());
 
