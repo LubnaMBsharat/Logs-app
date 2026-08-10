@@ -1,6 +1,5 @@
 import { describe, test, expect } from 'vitest';
 import { encodeCursor, decodeCursor } from '../../utils/cursor.js';
-import { logQuerySchema } from '../../types/log-query.type.js'
 
 describe('Unit: Cursor Utilities', () => {
   test('should correctly encode and decode a valid cursor payload', () => {

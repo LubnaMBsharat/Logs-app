@@ -10,6 +10,7 @@ import router from './routes.js';
 
 export const app = express();
 const PORT = config.port;
+
 app.use(express.json());
 
 app.use(router);

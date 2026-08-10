@@ -1,6 +1,6 @@
 import {z} from "zod";
 
-export const logQuerySchema = z.object({
+export const basicLogQuerySchema = z.object({
     service: z.string().optional(),
     level: z.enum(['debug','info','warn','error']).optional(),
     since: z.iso.datetime().optional(),
@@ -8,7 +8,8 @@ export const logQuerySchema = z.object({
     q: z.string().optional(),
     limit: z.coerce.number().int().min(1).max(1000).default(100),
     cursor: z.string().optional() 
-}).refine((data)=>{
+})
+export const logQuerySchema = basicLogQuerySchema.refine((data)=>{
     // if since an until both is sent
     if(data.since && data.until){
         return new Date(data.since) <= new Date(data.until);
