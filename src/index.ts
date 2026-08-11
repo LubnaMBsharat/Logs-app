@@ -7,6 +7,7 @@ import { errorHandler } from "./middlewares/error-handler.js";
 import appState from './utils/app-state.js';
 import { checkDatabaseConnection } from './config/db.js';
 import router from './routes.js';
+import { managePartitions } from './services/partitions.service.js';
 
 export const app = express();
 const PORT = config.port;
@@ -24,6 +25,13 @@ async function startServer(){
 
         const migrationClient = postgres(config.dbUrl,{max:1});
         await migrate(drizzle(migrationClient),config.migrationConfig);
+
+        await managePartitions();
+        setInterval(() => {
+            managePartitions().catch((err) =>
+            console.error(`Error in periodic partition check: ${err}`)
+        );
+        }, 12 * 60 * 60 * 1000);
 
         appState.isReady = true;
         app.listen(PORT, ()=>{

@@ -1,5 +1,5 @@
 {
-  "id": "926254b8-f926-447d-b210-22cbd2c2a6f8",
+  "id": "fe13b171-ed0f-437a-ba19-ad8517270df6",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -11,7 +11,7 @@
         "id": {
           "name": "id",
           "type": "uuid",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true,
           "default": "gen_random_uuid()"
         },
@@ -48,7 +48,15 @@
       },
       "indexes": {},
       "foreignKeys": {},
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "logs_id_timestamp_pk": {
+          "name": "logs_id_timestamp_pk",
+          "columns": [
+            "id",
+            "timestamp"
+          ]
+        }
+      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
