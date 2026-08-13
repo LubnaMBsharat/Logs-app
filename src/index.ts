@@ -12,7 +12,7 @@ import { managePartitions } from './services/partitions.service.js';
 export const app = express();
 const PORT = config.port;
 
-app.use(express.json());
+app.use(express.json({ limit: '20mb' }));
 
 app.use(router);
 

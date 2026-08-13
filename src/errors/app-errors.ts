@@ -33,6 +33,12 @@ export class NotFoundError extends AppError{
     }
 }
 
+export class ContentTooLarge extends AppError{
+    constructor(message:string){
+        super(message,"Content Too Large", 413);
+    }
+}
+
 export class ServiceUnavailable extends AppError{
     constructor(message:string){
         super(message,"Service Unavailable",503);
