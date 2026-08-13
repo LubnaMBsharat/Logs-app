@@ -3,7 +3,7 @@ import postgres from "postgres";
 import { config } from "../config/env.js";
 import * as schema from "../db/schema.js";
 
-const conn = postgres(config.dbUrl);
+const conn = postgres(config.dbUrl,{ max: 20 });
 export const db = drizzle(conn, {schema});
 
 export async function checkDatabaseConnection ():Promise<boolean>{

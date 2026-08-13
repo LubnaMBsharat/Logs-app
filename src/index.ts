@@ -18,6 +18,16 @@ app.use(router);
 
 app.use(errorHandler);
 
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+    process.exit(1);
+});
+ 
+process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled Rejection:', reason);
+    process.exit(1);
+});
+ 
 async function startServer(){
     try {
         const dbReadiness =await checkDatabaseConnection();
@@ -34,9 +44,25 @@ async function startServer(){
         }, 12 * 60 * 60 * 1000);
 
         appState.isReady = true;
-        app.listen(PORT, ()=>{
+        const server = app.listen(PORT, ()=>{
             console.log(`Server is running on http://localhost:${PORT}`);
         });
+        const shutdown = (signal: string) => {
+            console.log(`${signal} received, shutting down gracefully...`);
+            appState.isReady = false;
+            server.close(() => {
+                console.log('HTTP server closed');
+                process.exit(0);
+            });
+            // Safety net: force-exit if connections don't drain in time.
+            setTimeout(() => {
+                console.error('Forced shutdown after timeout');
+                process.exit(1);
+            }, 10_000).unref();
+        };
+ 
+        process.on('SIGTERM', () => shutdown('SIGTERM'));
+        process.on('SIGINT', () => shutdown('SIGINT'));        
     } catch (error) {
         console.log(`err in start server : ${error}`)
         appState.isReady = false;
