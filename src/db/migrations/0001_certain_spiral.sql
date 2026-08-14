@@ -1,0 +1,1 @@
+CREATE INDEX "idx_logs_level_timestamp_id" ON "logs" USING btree ("level","timestamp" DESC NULLS LAST,"id" DESC NULLS LAST);

@@ -1,4 +1,4 @@
-import { primaryKey } from "drizzle-orm/pg-core";
+import { index, primaryKey } from "drizzle-orm/pg-core";
 import { jsonb, pgTable, text, uuid, varchar, timestamp} from "drizzle-orm/pg-core";
 
 export const logs = pgTable("logs",{
@@ -9,7 +9,9 @@ export const logs = pgTable("logs",{
     message: text("message").notNull(),
     attributes: jsonb("attributes")
 },(table)=>({
-    pk: primaryKey({columns:[table.id,table.timestamp]})
+    pk: primaryKey({columns:[table.id,table.timestamp]}),
+    levelTimeStampIdIdx: index("idx_logs_level_timestamp_id")
+    .on(table.level, table.timestamp.desc(), table.id.desc())
 })
 
 );
