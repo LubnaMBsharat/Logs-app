@@ -8,6 +8,14 @@ export async function createPartitionTable (partitionName:string,startDate:strin
         FOR VALUES FROM ('${startDate}') TO ('${endDate}');
     `))
 }
+export async function createDefaultPartitionTable() {
+  await db.execute(
+    sql`
+      CREATE TABLE IF NOT EXISTS "logs_default"
+      PARTITION OF "logs" DEFAULT;
+    `
+  );
+}
 export async function getLogsTablePartitionTablesNames(){
     const result = await db.execute<{ table_name: string }>
     (sql`
@@ -23,4 +31,13 @@ export async function getLogsTablePartitionTablesNames(){
 
 export async function dropPartition(partitionName:string){
     await db.execute(sql.raw(`DROP TABLE IF EXISTS "${partitionName}"`));
+}
+
+export async function deleteExpiredFromDefaultPartition(
+  cutoffDate: Date
+) {
+  const result = await db.execute(sql`
+    DELETE FROM "logs_default"
+    WHERE "timestamp" < ${cutoffDate.toISOString()};
+  `);
 }
