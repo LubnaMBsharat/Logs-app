@@ -1,6 +1,6 @@
 import { loadOrThrow } from "../config/env.js";
 import { createPartitionTable, dropPartition, getLogsTablePartitionTablesNames } from "../db/queries/partitions.js";
-import { getDateSections } from "../utils/date-sections.js";
+import { getDateSections } from "../utils/date-utils.js";
 
 const envRetentionDays = Number(loadOrThrow("RETENTION_DAYS"));
 const RETENTION_DAYS = envRetentionDays  ? envRetentionDays  : 30;

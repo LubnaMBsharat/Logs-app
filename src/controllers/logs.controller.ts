@@ -1,13 +1,13 @@
 import {Request, Response} from "express";
 import { validateLogs } from "../services/log-validation.service.js";
-import { insertLogs } from "../db/queries/log-ingestion.js";
 import { queueLogsForInsert } from "../services/log-batch-queue.service.js";
+
 export async function insertLogsHandler(req: Request, res:Response){
     const result = validateLogs(req.body);
     // All entries are rejected    
     if(result.accepted.length === 0){
         res.status(400).json({
-            accepted: result.accepted.length,
+            accepted: 0,
             rejected: result.rejected
         });
         return;

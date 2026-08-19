@@ -1,16 +1,10 @@
-import {z} from "zod";
-import { commonFiltersSchema} from "./log-common.type.js";
+import { CommonFilters } from "./log-common.type.js";
 
-export const LogAggregatorSchema = commonFiltersSchema.extend({
-    since: z.iso.datetime(),
-    until:z.iso.datetime(),
-    bucket: z.enum(["1m","5m","1h","1d"]),
-    group_by: z.enum(["service","level"]).optional()
-}).refine(
-    (data)=> new Date(data.since) <= new Date(data.until),
-    {
-        message: "'since' date cannot be after 'until' date",
-        path: ['since']
-    } 
-);
-export type LogAggregator = z.infer<typeof LogAggregatorSchema>;
+export interface LogAggregator extends CommonFilters {
+  since: string;
+  until: string;
+  bucket: '1m' | '5m' | '1h' | '1d';
+  group_by?: 'service' | 'level';
+}
+export const VALID_BUCKETS = new Set(['1m', '5m', '1h', '1d']);
+export const VALID_GROUPS = new Set(['service', 'level']);
