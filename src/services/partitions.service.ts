@@ -1,5 +1,5 @@
 import { loadOrThrow } from "../config/env.js";
-import { createPartitionTable, deleteExpiredFromDefaultPartition, dropPartition, getLogsTablePartitionTablesNames } from "../db/queries/partitions.js";
+import { createDefaultPartitionTable, createPartitionTable, deleteExpiredFromDefaultPartition, dropPartition, getLogsTablePartitionTablesNames } from "../db/queries/partitions.js";
 import { getDateSections } from "../utils/date-utils.js";
 
 const envRetentionDays = Number(loadOrThrow("RETENTION_DAYS"));
@@ -9,7 +9,7 @@ const PRE_CREATE_DAYS = 2;
 export async function managePartitions() {
   console.log("Running Partition Management Service...");
   await buildFuturePartitionsTables();
-  await createDefaultPartitionTable()
+  await buildDefaultPartitionTable()
   await dropExpiredPartitions();
   await cleanupDefaultPartition();
 }
@@ -33,7 +33,7 @@ async function buildFuturePartitionsTables(){
         await createPartitionTable(partitionTableName,partitionStartDate,partitionEndDate);
     }
 }
-async function createDefaultPartitionTable() {
+async function buildDefaultPartitionTable() {
   await createDefaultPartitionTable();
 }
 
