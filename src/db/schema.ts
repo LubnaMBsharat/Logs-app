@@ -10,8 +10,10 @@ export const logs = pgTable("logs",{
     attributes: jsonb("attributes")
 },(table)=>({
     pk: primaryKey({columns:[table.id,table.timestamp]}),
-    levelTimeStampIdIdx: index("idx_logs_level_timestamp_id")
-    .on(table.level, table.timestamp.desc(), table.id.desc())
+    timeStampIdIdx: index("idx_logs_timestamp_id")
+    .on(table.timestamp.desc(), table.id.desc()),
+    serviceTimeStampIdIdx: index("idx_logs_service_timestamp_id")
+    .on(table.service, table.timestamp.desc(), table.id.desc())
 })
 
 );

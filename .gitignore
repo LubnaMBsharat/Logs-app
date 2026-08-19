@@ -2,3 +2,4 @@ node_modules
 dist/
 .env
 load-tests/
+.load-generator.compose.override.yml
