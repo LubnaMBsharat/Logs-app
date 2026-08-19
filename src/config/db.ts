@@ -4,6 +4,10 @@ import { config } from "../config/env.js";
 import * as schema from "../db/schema.js";
 
 const conn = postgres(config.dbUrl,{ max: 20 });
+export const copyClient = postgres(config.dbUrl, { 
+  max: 15,
+  idle_timeout: 5,
+});
 export const db = drizzle(conn, {schema});
 
 export async function checkDatabaseConnection ():Promise<boolean>{

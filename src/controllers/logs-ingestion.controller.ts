@@ -12,7 +12,7 @@ export async function insertLogsHandler(req: Request, res:Response){
         });
         return;
     }   
-    await queueLogsForInsert(result.accepted) ;
+    queueLogsForInsert(result.accepted) ;
     //await insertLogs(result.accepted)
     res.status(200).json({
         accepted: result.accepted.length,

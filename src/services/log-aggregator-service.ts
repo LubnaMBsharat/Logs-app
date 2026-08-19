@@ -2,7 +2,7 @@ import { gte, lt, SQL, and, sql } from "drizzle-orm";
 import { LogAggregator, VALID_GROUPS } from "../types/log-aggregator.type.js";
 import { buildCommonConditions } from "./log-common.service.js";
 import { logs } from "../db/schema.js";
-import { mapBucketToInterval } from "../utils/bucketMapper.js";
+import { mapBucketToInterval } from "../utils/string-utils.js";
 import { BadRequestError } from "../errors/app-errors.js";
 import { isValidISODate } from "../utils/date-utils.js";
 import { VALID_LEVELS } from "../types/log.type.js";

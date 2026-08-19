@@ -21,3 +21,7 @@ export function isValidISODate(str: string): boolean {
     // Date.parse return number if the date is valid and NaN if not
     return !isNaN(Date.parse(str));
 }
+
+export function toDate(value: Date | string): Date {
+  return value instanceof Date ? value : new Date(value);
+}

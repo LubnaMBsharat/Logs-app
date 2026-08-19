@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { healthHandler } from "./controllers/health.controller.js";
-import { insertLogsHandler } from "./controllers/logs.controller.js";
+import { insertLogsHandler } from "./controllers/logs-ingestion.controller.js";
 import { queryLogsHandler } from "./controllers/logs-query.controller.js";
 import { aggregateLogsHandler } from "./controllers/log-aggregator.controller.js";
 

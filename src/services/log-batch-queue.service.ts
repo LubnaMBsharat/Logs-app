@@ -1,69 +1,80 @@
-import { insertLogs } from "../db/queries/log-ingestion.js";
 import { LogEntry } from "../types/log.type.js";
+import { ServiceUnavailable } from "../errors/app-errors.js";
+import { copyInsertLogs } from "../db/queries/log-ingestion.js";
 
-const MAX_BATCH_SIZE = 2000;
-const MAX_WAIT_MS = 50;
+const MAX_BATCH_SIZE = 13000;
+const MAX_WAIT_MS = 100;
+const MAX_QUEUE_SIZE = 100000;
+const MAX_CONCURRENT_FLUSHES = 5; 
 
 interface QueuedRequest {
   entries: LogEntry[];
   resolve: () => void;
   reject: (err: unknown) => void;
 }
-// to store all the requests
+
 let queue: QueuedRequest[] = [];
-//lock the insert operation
-let isFlushing = false;
-// timer obj if it's running, and if it's off then null
+let currentQueueSize = 0;
 let flushTimer: NodeJS.Timeout | null = null;
-
-async function flush(){
-    if (isFlushing) return;
-    if (queue.length === 0) return;
-
-    //if we reached the max batch size before the timer ends then first I have to clear the timer for next times
-    if(flushTimer){
-        clearTimeout(flushTimer);
-        flushTimer = null;
-    }
-    isFlushing = true;
-    // empty the original buffer to start collecting new data while we insert the collected one into the DB;
-    const toProcess: QueuedRequest[] = [];
-    let count = 0;
-    while (queue.length > 0 && count + queue[0].entries.length <= MAX_BATCH_SIZE) {
-        const req = queue.shift()!;
-        toProcess.push(req);
-        count += req.entries.length;
-    }
-
-    if (toProcess.length === 0 && queue.length > 0) {
-        toProcess.push(queue.shift()!);
-    }
-
-    const entriesToInsert = toProcess.flatMap((r) => r.entries);
-    try {
-        const start = Date.now();
-        await insertLogs(entriesToInsert);
-        toProcess.forEach((r) => r.resolve());
-    } catch (err) {
-        toProcess.forEach((r) => r.reject(err));
-    } finally {
-        isFlushing = false;
-        if (queue.length > 0) {
-        void flush();
-    }
-  }   
-}
+let activeFlushes = 0;
 
 export function queueLogsForInsert(entries: LogEntry[]): Promise<void> {
+  if (currentQueueSize + entries.length > MAX_QUEUE_SIZE) {
+    throw new ServiceUnavailable("Server is overloaded, please retry shortly");
+  }
+
+  currentQueueSize += entries.length;
+
   return new Promise<void>((resolve, reject) => {
     queue.push({ entries, resolve, reject });
 
-    const totalQueued = queue.reduce((sum, r) => sum + r.entries.length, 0);
-
-    if (totalQueued >= MAX_BATCH_SIZE) {
+    if (currentQueueSize >= MAX_BATCH_SIZE) {
       void flush();
     } else if (!flushTimer) {
       flushTimer = setTimeout(() => void flush(), MAX_WAIT_MS);
     }
   });
 }
+
+async function flush() {
+  if (activeFlushes >= MAX_CONCURRENT_FLUSHES) return;
+  if (queue.length === 0) return;
+
+  if (flushTimer) {
+    clearTimeout(flushTimer);
+    flushTimer = null;
+  }
+
+  activeFlushes++;
+
+  const toProcess: QueuedRequest[] = [];
+  let count = 0;
+  while (queue.length > 0 && count + queue[0].entries.length <= MAX_BATCH_SIZE) {
+    const req = queue.shift()!;
+    toProcess.push(req);
+    count += req.entries.length;
+  }
+
+  if (toProcess.length === 0 && queue.length > 0) {
+    const req = queue.shift()!;
+    toProcess.push(req);
+    count += req.entries.length;
+  }
+
+  currentQueueSize -= count;
+  if (currentQueueSize < 0) currentQueueSize = 0;
+
+  const entriesToInsert = toProcess.flatMap((r) => r.entries);
+  try {
+    await copyInsertLogs(entriesToInsert);
+    toProcess.forEach((r) => r.resolve());
+  } catch (err) {
+    toProcess.forEach((r) => r.reject(err));
+  } finally {
+    activeFlushes--;
+    if (queue.length > 0) {
+      void flush();
+    }
+  }
+}
+
