@@ -25,3 +25,9 @@ export function isValidISODate(str: string): boolean {
 export function toDate(value: Date | string): Date {
   return value instanceof Date ? value : new Date(value);
 }
+
+// returns the start of the minute, does the same as date_bin('1 minute', ts, '2000-01-01')
+// ex: 10:30:45.123 → 10:30:00.000
+export function truncateToMinute(d: Date): number {
+  return Math.floor(d.getTime() / 60000) * 60000;
+}

@@ -35,7 +35,6 @@ export function queueLogsForInsert(entries: LogEntry[]): Promise<void> {
     }
   });
 }
-
 async function flush() {
   if (activeFlushes >= MAX_CONCURRENT_FLUSHES) return;
   if (queue.length === 0) return;
@@ -47,21 +46,9 @@ async function flush() {
 
   activeFlushes++;
 
-  const toProcess: QueuedRequest[] = [];
-  let count = 0;
-  while (queue.length > 0 && count + queue[0].entries.length <= MAX_BATCH_SIZE) {
-    const req = queue.shift()!;
-    toProcess.push(req);
-    count += req.entries.length;
-  }
-
-  if (toProcess.length === 0 && queue.length > 0) {
-    const req = queue.shift()!;
-    toProcess.push(req);
-    count += req.entries.length;
-  }
-
+  const { toProcess, count } = getBatchFromTheQueue();
   currentQueueSize -= count;
+
   if (currentQueueSize < 0) currentQueueSize = 0;
 
   const entriesToInsert = toProcess.flatMap((r) => r.entries);
@@ -77,4 +64,18 @@ async function flush() {
     }
   }
 }
-
+function getBatchFromTheQueue(): { toProcess: QueuedRequest[]; count: number } {
+    const toProcess: QueuedRequest[] = [];
+    let count = 0;
+    while (queue.length > 0 && count + queue[0].entries.length <= MAX_BATCH_SIZE) {
+      const req = queue.shift()!;
+      toProcess.push(req);
+      count += req.entries.length;
+  }
+  if (toProcess.length === 0 && queue.length > 0) {
+    const req = queue.shift()!;
+    toProcess.push(req);
+    count += req.entries.length;
+  }
+  return { toProcess, count };
+}

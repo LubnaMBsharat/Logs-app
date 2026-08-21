@@ -1,5 +1,6 @@
 import { loadOrThrow } from "../config/env.js";
 import { createDefaultPartitionTable, createPartitionTable, deleteExpiredFromDefaultPartition, dropPartition, getLogsTablePartitionTablesNames } from "../db/queries/partitions.js";
+import { pruneRollupTable } from "../db/queries/rollup.js";
 import { getDateSections } from "../utils/date-utils.js";
 
 const envRetentionDays = Number(loadOrThrow("RETENTION_DAYS"));
@@ -12,6 +13,7 @@ export async function managePartitions() {
   await buildDefaultPartitionTable()
   await dropExpiredPartitions();
   await cleanupDefaultPartition();
+  await pruneRollupTable(RETENTION_DAYS);
 }
 
 async function buildFuturePartitionsTables(){
@@ -62,6 +64,3 @@ async function cleanupDefaultPartition() {
 
   const deletedCount = await deleteExpiredFromDefaultPartition(cutoffDate);
 }
-
-
-

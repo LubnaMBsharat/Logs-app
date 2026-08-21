@@ -1,3 +1,6 @@
+import { LogEntry } from "../types/log.type.js";
+import { toDate } from "./date-utils.js";
+
 export function mapBucketToInterval(bucket: '1m'|'5m'|'1h'|'1d'): string{
     const bucketMap: Record<string,string>={
         '1m':'1 minute',
@@ -13,4 +16,9 @@ export function escapeText(value: string): string {
   .replace(/\\/g, "\\\\") // replace \ with \\
   .replace(/\t/g, "\\t") // replace actual tab \t in the string with text tab \\t => '\t'
   .replace(/\n/g, "\\n"); // replace actual enter \n int the string with text enter \\n => '\n'
+}
+export function buildRow(e: LogEntry): string {
+  const ts = toDate(e.timestamp);
+  const attributesJson = JSON.stringify(e.attributes ?? {});
+  return `${escapeText(ts.toISOString())}\t${escapeText(e.level)}\t${escapeText(e.service)}\t${escapeText(e.message)}\t${escapeText(attributesJson)}`;
 }

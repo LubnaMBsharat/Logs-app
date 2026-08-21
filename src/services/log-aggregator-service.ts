@@ -6,6 +6,7 @@ import { mapBucketToInterval } from "../utils/string-utils.js";
 import { BadRequestError } from "../errors/app-errors.js";
 import { isValidISODate } from "../utils/date-utils.js";
 import { VALID_LEVELS } from "../types/log.type.js";
+import { buildRollupAggregateQuery } from "./rollup.service.js";
 
 export function validateLogAggregator(query: Record<string, any>): LogAggregator {
     if (!query.since || typeof query.since !== 'string' || !isValidISODate(query.since)) {
@@ -48,6 +49,14 @@ export function validateLogAggregator(query: Record<string, any>): LogAggregator
 
 }
 export function buildAggregateQuery(queryParams: LogAggregator, rawQuery: Record<string, unknown>) {
+    const useRaw = hasUnsupportedRollupFilters(rawQuery);
+
+    if (useRaw) 
+        return buildRawAggregateQuery(queryParams, rawQuery);
+    return buildRollupAggregateQuery(queryParams);
+}
+
+export function buildRawAggregateQuery(queryParams: LogAggregator, rawQuery: Record<string, unknown>) {
     const conditions: SQL[] = [];
     conditions.push(...buildCommonConditions(queryParams, rawQuery));
     conditions.push(gte(logs.timestamp, new Date(queryParams.since)));
@@ -75,4 +84,8 @@ export function buildAggregateQuery(queryParams: LogAggregator, rawQuery: Record
     ${groupByClause}
     ORDER BY start ASC
     `;
+}
+function hasUnsupportedRollupFilters(rawQuery: Record<string, unknown>): boolean {
+  if (typeof rawQuery.q === "string" && rawQuery.q.length > 0) return true;
+  return Object.keys(rawQuery).some((key) => key.startsWith("attr."));
 }
