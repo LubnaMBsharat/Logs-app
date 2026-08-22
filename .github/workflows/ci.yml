@@ -7,8 +7,30 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: log_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d log_db"
+          --health-interval=3s
+          --health-timeout=3s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/log_db
+      PORT: 8080
+      RETENTION_DAYS: 30
+      NODE_ENV: test
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,3 +45,6 @@ jobs:
 
       - name: Build Project
         run: npm run build
+
+      - name: Run Vitest Tests
+        run: npm test
