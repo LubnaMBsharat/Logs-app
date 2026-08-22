@@ -1,10 +1,8 @@
-import { loadOrThrow } from "../config/env.js";
+import { config } from "../config/env.js";
 import { createDefaultPartitionTable, createPartitionTable, deleteExpiredFromDefaultPartition, dropPartition, getLogsTablePartitionTablesNames } from "../db/queries/partitions.js";
 import { pruneRollupTable } from "../db/queries/rollup.js";
 import { getDateSections } from "../utils/date-utils.js";
 
-const envRetentionDays = Number(loadOrThrow("RETENTION_DAYS"));
-const RETENTION_DAYS = envRetentionDays  ? envRetentionDays  : 30;
 const PRE_CREATE_DAYS = 2;
 
 export async function managePartitions() {
@@ -13,12 +11,12 @@ export async function managePartitions() {
   await buildDefaultPartitionTable()
   await dropExpiredPartitions();
   await cleanupDefaultPartition();
-  await pruneRollupTable(RETENTION_DAYS);
+  await pruneRollupTable();
 }
 
 async function buildFuturePartitionsTables(){
     const currentDate = new Date();
-    for(let i = -RETENTION_DAYS; i <= PRE_CREATE_DAYS; i++){
+    for(let i = -config.retentionDays; i <= PRE_CREATE_DAYS; i++){
         const targetDate = new Date (currentDate);
         targetDate.setUTCDate(currentDate.getUTCDate() + i);
 
@@ -41,7 +39,7 @@ async function buildDefaultPartitionTable() {
 
 async function dropExpiredPartitions(){
     const cutoffDate = new Date();
-    cutoffDate.setUTCDate(cutoffDate.getUTCDate()-RETENTION_DAYS);
+    cutoffDate.setUTCDate(cutoffDate.getUTCDate()-config.retentionDays);
 
     const result = await getLogsTablePartitionTablesNames();
     for(const row of result){
@@ -60,7 +58,7 @@ async function dropExpiredPartitions(){
 }
 async function cleanupDefaultPartition() {
   const cutoffDate = new Date();
-  cutoffDate.setUTCDate(cutoffDate.getUTCDate() - RETENTION_DAYS);
+  cutoffDate.setUTCDate(cutoffDate.getUTCDate() - config.retentionDays);
 
   const deletedCount = await deleteExpiredFromDefaultPartition(cutoffDate);
 }

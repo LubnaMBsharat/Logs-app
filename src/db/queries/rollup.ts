@@ -1,39 +1,45 @@
 import { lt, sql } from "drizzle-orm";
-import { copyClient, db } from "../../config/db.js";
+import { rollupClient, dbRollup } from "../../config/db.js";
 import { sortDeltasForLocking } from "../../services/rollup.service.js";
 import { RollupDelta} from "../../types/rollup.type.js";
 import { logsRollup1m } from "../schema.js";
+import { config } from "../../config/env.js";
 
 export async function upsertRollup(deltas: RollupDelta[]): Promise<void> {
   if (deltas.length === 0) return;
 
   const sorted = sortDeltasForLocking(deltas);
 
-  const bucketStarts = sorted.map((d) => d.bucket_start);
-  const services = sorted.map((d) => d.service);
-  const levels = sorted.map((d) => d.level);
-  const counts = sorted.map((d) => d.log_count);
+  const params: unknown[] = [];
+  const valueGroups = sorted.map((d) => {
+    const base = params.length;
+    params.push(
+      d.bucket_start.toISOString(),
+      d.service,
+      d.level,
+      String(d.log_count)
+    );
+    return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4})`;
+  });
 
-  await copyClient`
+  await rollupClient.unsafe(
+    `
     INSERT INTO logs_rollup_1m (bucket_start, service, level, log_count)
-    SELECT * FROM UNNEST(
-      ${copyClient.array(bucketStarts)}::timestamptz[],
-      ${copyClient.array(services)}::text[],
-      ${copyClient.array(levels)}::text[],
-      ${copyClient.array(counts)}::int[]
-    )
+    VALUES ${valueGroups.join(", ")}
     ON CONFLICT (bucket_start, service, level)
     DO UPDATE SET log_count = logs_rollup_1m.log_count + EXCLUDED.log_count
-  `;
+  `,
+    params as any[]
+  );
 }
 
-export async function pruneRollupTable(retentionDays: number) {
-  await db
+export async function pruneRollupTable() {
+  await dbRollup
     .delete(logsRollup1m)
     .where(
       lt(
         logsRollup1m.bucketStart, 
-        sql`now() - (${retentionDays} || ' days')::interval`
+        sql`now() - (${config.retentionDays} || ' days')::interval`
       )
     );
 }

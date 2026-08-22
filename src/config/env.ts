@@ -15,6 +15,7 @@ type Config = {
     dbUrl : string;
     port:number;
     migrationConfig : MigrationConfig;
+    retentionDays : number;
 }
 //MigrationConfig object that stores the path to my migrations, we will use it for automatic migrations
 const migrationConfig: MigrationConfig ={ 
@@ -23,5 +24,6 @@ const migrationConfig: MigrationConfig ={
 export const config : Config = {
     dbUrl : loadOrThrow("DATABASE_URL"),
     port: Number(loadOrThrow("PORT")),
-    migrationConfig : migrationConfig
+    migrationConfig : migrationConfig,
+    retentionDays: Number(loadOrThrow("RETENTION_DAYS"))
 }
